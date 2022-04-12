@@ -1,6 +1,6 @@
 package com.vasili_zlobin.lesson1;
 
-public class Robot implements CanRunAndJump {
+public class Robot implements Member {
     private String model;
     private int canRun;
     private double canJump;

@@ -1,6 +1,6 @@
 package com.vasili_zlobin.lesson1;
 
-public class Cat implements CanRunAndJump {
+public class Cat implements Member {
     private String nick;
     private int canRun;
     private double canJump;

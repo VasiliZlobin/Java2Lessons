@@ -1,6 +1,6 @@
 package com.vasili_zlobin.lesson1;
 
-public class Treadmill implements CheckSuccess {
+public class Treadmill implements Obstacle {
     private static final int MIN_LENGTH = 10;
     private int length;
 
@@ -9,7 +9,7 @@ public class Treadmill implements CheckSuccess {
     }
 
     @Override
-    public boolean isSuccess(CanRunAndJump member) {
+    public boolean isSuccess(Member member) {
         boolean success = member.run() >= length;
         String prefix = success ? "" : "не ";
         System.out.printf("%s %sсмог пробежать %d%n", member.getInfo(), prefix, length);

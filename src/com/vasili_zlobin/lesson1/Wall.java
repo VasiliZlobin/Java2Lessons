@@ -1,6 +1,6 @@
 package com.vasili_zlobin.lesson1;
 
-public class Wall implements CheckSuccess {
+public class Wall implements Obstacle {
     private static final double MIN_HEIGHT = 0.1;
     private double height;
 
@@ -9,7 +9,7 @@ public class Wall implements CheckSuccess {
     }
 
     @Override
-    public boolean isSuccess(CanRunAndJump member) {
+    public boolean isSuccess(Member member) {
         boolean success = member.jump() >= height;
         String prefix = success ? "" : "не ";
         System.out.printf("%s %sсмог перепрыгнуть %s%n", member.getInfo(), prefix, height);

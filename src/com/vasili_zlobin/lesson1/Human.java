@@ -1,6 +1,6 @@
 package com.vasili_zlobin.lesson1;
 
-public class Human implements CanRunAndJump {
+public class Human implements Member {
     private String name;
     private double canJump;
     private int canRun;
