@@ -79,5 +79,4 @@ fabric.properties
 .idea/vcs.xml
 .idea/*.*
 *.iml
-
 ClientChat/target/
