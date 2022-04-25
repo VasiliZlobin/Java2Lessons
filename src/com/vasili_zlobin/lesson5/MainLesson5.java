@@ -22,9 +22,7 @@ public class MainLesson5 {
         Arrays.fill(array, 1);
         System.out.println("Старт первого метода");
         currentTimeMs = System.currentTimeMillis();
-        for (int i = 0; i < array.length; i++) {
-            evaluateArrayValue(array, i);
-        }
+        evaluateArrayValues(array);
         getPeriodWithPrint("Первый метод отработал за %d мс%n");
     }
 
@@ -58,7 +56,9 @@ public class MainLesson5 {
         return period;
     }
 
-    static void evaluateArrayValue(float[] arr, int i) {
-        arr[i] = (float) (arr[i] * Math.sin(0.2f + i / 5.0f) * Math.cos(0.2f + i / 5.0f) * Math.cos(0.4f + i / 2.0f));
+    static void evaluateArrayValues(float[] arr) {
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = (float) (arr[i] * Math.sin(0.2f + i / 5.0f) * Math.cos(0.2f + i / 5.0f) * Math.cos(0.4f + i / 2.0f));
+        }
     }
 }

@@ -10,8 +10,6 @@ public class EvaluateArrayThread extends Thread {
 
     @Override
     public void run() {
-        for (int i = 0; i < array.length; i++) {
-            MainLesson5.evaluateArrayValue(array, i);
-        }
+        MainLesson5.evaluateArrayValues(array);
     }
 }
