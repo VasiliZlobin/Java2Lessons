@@ -15,7 +15,9 @@ public class ConsoleChatClient {
             threadNetwork.join();
             threadConsole.join();
             network.closeConnection();
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
+            System.err.println("Ошибка соединения с сервером");
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
