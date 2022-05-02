@@ -33,10 +33,6 @@ public class Network {
         try {
             return socketInput.readUTF();
         } catch (IOException e) {
-            if (closeSession) {
-                return "";
-            }
-            System.err.println("Ошибка получения сообщения от " + hostName);
             return COMMAND_BREAK;
         }
     }
@@ -60,7 +56,7 @@ public class Network {
     }
 
     public void waitConsoleInput() {
-        while (true) {
+        while (!closeSession) {
             String message = scanner.nextLine();
             try {
                 if (closeSession) {
@@ -86,7 +82,8 @@ public class Network {
             String message = receiveMessage();
             if (message.equals(Network.COMMAND_BREAK)) {
                 closeSession = true;
-                System.out.println("Сеанс закрыт, введите любую строку для завершения работы.");
+                System.out.println("Сеанс закрыт.");
+                System.exit(0);
                 break;
             }
             System.out.println(message);
