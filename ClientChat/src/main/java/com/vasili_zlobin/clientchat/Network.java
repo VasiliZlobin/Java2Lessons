@@ -71,12 +71,12 @@ public class Network {
 
     public void close() {
         try {
-            sendMessage(COMMAND_BREAK);
+            if (outputStream != null) {
+                sendMessage(COMMAND_BREAK);
+                outputStream.close();
+            }
             if (inputStream != null) {
                 inputStream.close();
-            }
-            if (outputStream != null) {
-                outputStream.close();
             }
             if (socket != null) {
                 socket.close();
