@@ -1,11 +1,12 @@
 package com.vasili_zlobin.chat_server;
 
+import com.vasili_zlobin.chat.command.Command;
 import com.vasili_zlobin.chat_server.authenticate.AuthInterface;
 import com.vasili_zlobin.chat_server.authenticate.BaseAuthService;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ public class ServerService {
     private final Map<String, ClientHandler> clients;
 
     private ServerService() {
-        clients = new HashMap<>();
+        this.clients = new HashMap<>();
         this.authService = BaseAuthService.getInstance();
     }
 
@@ -27,6 +28,21 @@ public class ServerService {
                 new ClientHandler(clientSocket).handle();
             } catch (IOException e) {
                 System.err.println("Failed client's connection");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void broadcastUserList() {
+        String[] users = new String[clients.size()];
+        clients.keySet().toArray(users);
+        Arrays.sort(users);
+        Command command = Command.updateUserListCommand(Arrays.asList(users));
+        for (String client : clients.keySet()) {
+            try {
+                clients.get(client).sendCommand(command);
+            } catch (IOException e) {
+                System.err.println("Failed to send user list for " + client);
                 e.printStackTrace();
             }
         }
@@ -53,32 +69,34 @@ public class ServerService {
         }
     }
 
-    public synchronized boolean subscribe(ClientHandler client) {
-        boolean result = false;
-        String name = client.getName();
-        if (!clients.containsKey(name)) {
-            clients.put(name, client);
-            result = true;
-        }
-        return result;
+    public synchronized boolean isUserNameBusy(String name) {
+        return clients.containsKey(name);
+    }
+
+    public synchronized void subscribe(ClientHandler client) {
+        clients.put(client.getUserName(), client);
+        broadcastUserList();
     }
 
     public synchronized void unsubscribe(ClientHandler client) {
-        String name = client.getName();
+        String name = client.getUserName();
         clients.remove(name);
+        if (!clients.isEmpty()) {
+            broadcastUserList();
+        }
     }
 
-    public synchronized void broadcastMessage(String message, String senderName) throws IOException {
+    public synchronized void broadcastMessage(String message, String sender) throws IOException {
         for (String name : clients.keySet()) {
-            if (!name.equals(senderName)) {
-                clients.get(name).sendMessage(message);
+            if (!name.equals(sender)) {
+                clients.get(name).sendMessage(sender, message);
             }
         }
     }
 
-    public synchronized void sendPersonalMessage(String message, String sourceName) throws IOException {
-        if (clients.containsKey(sourceName)) {
-            clients.get(sourceName).sendMessage(message);
+    public synchronized void sendPersonalMessage(String message, String sender, String receiver) throws IOException {
+        if (clients.containsKey(receiver)) {
+            clients.get(receiver).sendMessage(sender, message);
         }
     }
 }

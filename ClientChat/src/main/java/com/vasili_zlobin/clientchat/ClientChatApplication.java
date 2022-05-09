@@ -3,10 +3,10 @@ package com.vasili_zlobin.clientchat;
 import com.vasili_zlobin.clientchat.controllers.AuthController;
 import com.vasili_zlobin.clientchat.controllers.ClientChatController;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -18,6 +18,8 @@ public class ClientChatApplication extends Application {
 
     private Stage chatStage;
     private Stage authStage;
+    private FXMLLoader chatWindowLoader;
+    private FXMLLoader authWindowLoader;
 
     public ClientChatApplication() {
         super();
@@ -30,63 +32,48 @@ public class ClientChatApplication extends Application {
         return mainInstance;
     }
 
-    private void createAuthDialog(Stage primaryStage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader();
-        fxmlLoader.setLocation(ClientChatApplication.class.getResource("auth-template.fxml"));
-        AnchorPane authDialogPanel = fxmlLoader.load();
+    private void initAuthWindow() throws IOException {
+        authWindowLoader = new FXMLLoader();
+        authWindowLoader.setLocation(ClientChatApplication.class.getResource("auth-template.fxml"));
+        AnchorPane authDialogPanel = authWindowLoader.load();
 
         authStage = new Stage();
-        authStage.initOwner(primaryStage);
+        authStage.initOwner(chatStage);
+        authStage.setTitle("Вход в сетевой чат");
         authStage.initModality(Modality.WINDOW_MODAL);
         authStage.setScene(new Scene(authDialogPanel));
-
-        AuthController controller = fxmlLoader.getController();
-        controller.startHandlerAuth();
-
-        authStage.showAndWait();
     }
 
-    private ClientChatController createChatDialog(Stage primaryStage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader();
-        fxmlLoader.setLocation(ClientChatApplication.class.getResource("chat-template.fxml"));
+    private void initChatWindow() throws IOException {
+        chatWindowLoader = new FXMLLoader();
+        chatWindowLoader.setLocation(ClientChatApplication.class.getResource("chat-template.fxml"));
 
-        Parent root = fxmlLoader.load();
+        Parent root = chatWindowLoader.load();
         Scene scene = new Scene(root);
-        chatStage.setTitle("Java FX Application");
         chatStage.setScene(scene);
-
-        ClientChatController controller = fxmlLoader.getController();
-        controller.userList.getItems().addAll("user1", "user2", "user3");
-
-        primaryStage.show();
-        return controller;
     }
 
-    private boolean connectToServer() {
-        boolean result = Network.getInstance().connectToServer();
-        if (!result) {
-            showErrorDialog("Не удалось подключиться к серверу");
-        }
-        chatStage.setOnCloseRequest(windowEvent -> Network.getInstance().close());
-        return result;
+    private void initViews() throws IOException {
+        initChatWindow();
+        initAuthWindow();
     }
 
     @Override
     public void start(Stage primaryStage) throws IOException {
         chatStage = primaryStage;
-
-        ClientChatController controller = createChatDialog(primaryStage);
-        if (connectToServer()) {
-            createAuthDialog(primaryStage);
-            controller.startMessagesHandler();
-        }
+        initViews();
+        getAuthWindowController().startHandlerAuth();
+        authStage.showAndWait();
     }
 
-    public void showErrorDialog(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Ошибка");
-        alert.setContentText(message);
-        alert.showAndWait();
+    public void switchToMainChatWindow(String userName) {
+        chatStage.setTitle(userName);
+        ClientChatController controller = getChatWindowController();
+        controller.setUserName(userName);
+        controller.startMessagesHandler();
+        getAuthWindowController().close();
+        authStage.close();
+        chatStage.show();
     }
 
     public Stage getChatStage() {
@@ -95,6 +82,18 @@ public class ClientChatApplication extends Application {
 
     public Stage getAuthStage() {
         return authStage;
+    }
+
+    public ClientChatController getChatWindowController() {
+        return chatWindowLoader.getController();
+    }
+
+    public AuthController getAuthWindowController() {
+        return authWindowLoader.getController();
+    }
+
+    public void closeClientChatApplication() {
+        Platform.exit();
     }
 
     public static void main(String[] args) {

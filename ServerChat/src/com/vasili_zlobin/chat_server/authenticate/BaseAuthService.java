@@ -17,7 +17,7 @@ public class BaseAuthService implements AuthInterface {
     }
 
     private static BaseAuthService authInstance;
-    private Map<String, User> knownUsers = new HashMap<>();
+    private final Map<String, User> knownUsers = new HashMap<>();
 
     private BaseAuthService() {
         for (int i = 0; i < 5; i++) {
