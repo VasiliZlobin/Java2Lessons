@@ -19,12 +19,12 @@ public class ClientHandler {
     private final Object syncObject = new Object();
     private String userName;
     private Thread handleThread;
+    private Thread timeoutThread;
 
     public ClientHandler(Socket socket) throws IOException {
         this.socket = socket;
         inputStream = new ObjectInputStream(socket.getInputStream());
         outputStream = new ObjectOutputStream(socket.getOutputStream());
-        System.out.println("Клиент подключился");
     }
 
     private void authenticate() throws IOException {
@@ -50,6 +50,7 @@ public class ClientHandler {
                             userName = tempName;
                             sendCommand(Command.authOkCommand(userName));
                             server.subscribe(this);
+                            timeoutThread.interrupt();
                             break;
                         }
                     }
@@ -103,19 +104,19 @@ public class ClientHandler {
     }
 
     private void checkAuthTimeout() {
-        new Thread(() -> {
+        timeoutThread = new Thread(() -> {
             try {
                 Thread.sleep(AUTH_TIMEOUT_MS);
                 synchronized (syncObject) {
-                    System.out.println("Проверка таймаута");
-                    if (userName == null) {
+                    if (!Thread.currentThread().isInterrupted() && userName == null) {
                         closeConnection();
                     }
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println("Check timeout has interrupted");
             }
-        }).start();
+        });
+        timeoutThread.start();
     }
 
     public String getUserName() {
@@ -149,6 +150,9 @@ public class ClientHandler {
 
     public void closeConnection() {
         try {
+            if (timeoutThread != null && !timeoutThread.isInterrupted()) {
+                timeoutThread.interrupt();
+            }
             if (handleThread != null && !handleThread.isInterrupted()) {
                 handleThread.interrupt();
             }
