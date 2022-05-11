@@ -1,7 +1,11 @@
 package com.vasili_zlobin.clientchat.controllers;
 
-import com.vasili_zlobin.clientchat.Network;
+import com.vasili_zlobin.chat.command.commands.ReceivedMessageCommandData;
+import com.vasili_zlobin.chat.command.commands.UpdateUserListCommandData;
+import com.vasili_zlobin.clientchat.ClientChatApplication;
+import com.vasili_zlobin.clientchat.model.Network;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -14,7 +18,7 @@ import java.util.Date;
 
 public class ClientChatController {
 
-    private static final String COMMAND_PERSONAL = "/w";
+    private String userName;
 
     @FXML
     public TextField messageField;
@@ -26,7 +30,7 @@ public class ClientChatController {
     public TextArea messageTextArea;
 
     @FXML
-    public ListView userList;
+    public ListView<String> userList;
 
     private void appendMessageToChat(String sender, String message) {
         messageTextArea.appendText(DateFormat.getDateTimeInstance().format(new Date()));
@@ -44,17 +48,20 @@ public class ClientChatController {
         String message = messageField.getText().trim();
         if (!message.isEmpty()) {
             String receiver = null;
+
             if (!userList.getSelectionModel().isEmpty()) {
-                receiver = userList.getSelectionModel().getSelectedItem().toString();
+                receiver = userList.getSelectionModel().getSelectedItem();
             }
-            String forSend = receiver == null ? message : String.format("%s %s %s", COMMAND_PERSONAL, receiver, message);
-            try {
-                Network.getInstance().sendMessage(forSend);
-            } catch (IOException e) {
-                System.err.println("Ошибка отправки сообщения");
-                e.printStackTrace();
+
+            if (receiver == null || !receiver.equals(getUserName())) {
+                try {
+                    Network.getInstance().sendMessage(message, receiver);
+                } catch (IOException e) {
+                    System.err.println("Ошибка отправки сообщения");
+                    e.printStackTrace();
+                }
+                appendMessageToChat("Я", message);
             }
-            appendMessageToChat("Я", message);
         }
         messageField.clear();
         messageField.setFocusTraversable(true);
@@ -62,6 +69,28 @@ public class ClientChatController {
     }
 
     public void startMessagesHandler() {
-        Network.getInstance().receiveMessages(message -> appendMessageToChat("Server", message));
+        ClientChatApplication.getInstance().getChatStage().setOnCloseRequest(windowEvent -> Network.getInstance().close());
+        Network.getInstance().addReadMessagesListener(command -> {
+            switch (command.getType()) {
+                case RECEIVED_MESSAGE: {
+                    ReceivedMessageCommandData data = (ReceivedMessageCommandData) command.getData();
+                    appendMessageToChat(data.getSender(), data.getMessage());
+                    break;
+                }
+                case UPDATE_USER_LIST: {
+                    UpdateUserListCommandData data = (UpdateUserListCommandData) command.getData();
+                    Platform.runLater(() -> userList.setItems(FXCollections.observableArrayList(data.getUsers())));
+                    break;
+                }
+            }
+        });
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }
