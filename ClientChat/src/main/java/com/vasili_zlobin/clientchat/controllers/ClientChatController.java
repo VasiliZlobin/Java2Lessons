@@ -3,6 +3,7 @@ package com.vasili_zlobin.clientchat.controllers;
 import com.vasili_zlobin.chat.command.commands.ReceivedMessageCommandData;
 import com.vasili_zlobin.chat.command.commands.UpdateUserListCommandData;
 import com.vasili_zlobin.clientchat.ClientChatApplication;
+import com.vasili_zlobin.clientchat.dialogs.Dialogs;
 import com.vasili_zlobin.clientchat.model.Network;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -11,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -43,6 +45,10 @@ public class ClientChatController {
         messageTextArea.appendText(System.lineSeparator());
     }
 
+    private Stage getChatStage() {
+        return ClientChatApplication.getInstance().getChatStage();
+    }
+
     @FXML
     public void addMessageText() {
         String message = messageField.getText().trim();
@@ -56,11 +62,11 @@ public class ClientChatController {
             if (receiver == null || !receiver.equals(getUserName())) {
                 try {
                     Network.getInstance().sendMessage(message, receiver);
+                    appendMessageToChat("Я", message);
                 } catch (IOException e) {
-                    System.err.println("Ошибка отправки сообщения");
+                    Dialogs.NetworkError.SEND_MESSAGE.show(getChatStage());
                     e.printStackTrace();
                 }
-                appendMessageToChat("Я", message);
             }
         }
         messageField.clear();
@@ -69,7 +75,7 @@ public class ClientChatController {
     }
 
     public void startMessagesHandler() {
-        ClientChatApplication.getInstance().getChatStage().setOnCloseRequest(windowEvent -> Network.getInstance().close());
+        getChatStage().setOnCloseRequest(windowEvent -> Network.getInstance().close());
         Network.getInstance().addReadMessagesListener(command -> {
             switch (command.getType()) {
                 case RECEIVED_MESSAGE: {

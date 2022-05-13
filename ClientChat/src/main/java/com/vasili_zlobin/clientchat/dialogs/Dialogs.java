@@ -29,7 +29,8 @@ public class Dialogs {
 
     public enum NetworkError {
         SERVER_CONNECT("Не удалось соединиться с сервером"),
-        SEND_MESSAGE("Не удалось отправить сообщение серверу");
+        SEND_MESSAGE("Не удалось отправить сообщение серверу"),
+        BREAK_CONNECT("Потеряно соединение с сервером");
 
         private static final String TYPE = "Ошибка передачи данных по сети";
         private static final String TITLE = "Сетевая ошибка";
