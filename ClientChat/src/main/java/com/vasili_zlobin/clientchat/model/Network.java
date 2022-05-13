@@ -17,7 +17,7 @@ public class Network {
     private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_PORT = 8189;
     private static final int START_TIMEOUT_RECONNECT = 100;
-    private static final int MAX_TIMEOUT_RECONNECT = 500;
+    private static final int MAX_TIMEOUT_RECONNECT = 60_000;
     private static Network networkInstance;
 
     private final String address;
