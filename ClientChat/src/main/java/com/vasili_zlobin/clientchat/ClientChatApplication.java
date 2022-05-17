@@ -62,16 +62,23 @@ public class ClientChatApplication extends Application {
     public void start(Stage primaryStage) throws IOException {
         chatStage = primaryStage;
         initViews();
-        getAuthWindowController().startHandlerAuth();
+        showAuthWindow();
+    }
+
+    public void showAuthWindow() {
+        getChatStage().close();
+        AuthController authController = getAuthController();
+        authController.setOnCloseWindowAuth();
+        authController.startHandlerAuth();
         authStage.showAndWait();
     }
 
     public void switchToMainChatWindow(String userName) {
         chatStage.setTitle(userName);
-        ClientChatController controller = getChatWindowController();
+        ClientChatController controller = getChatController();
         controller.setUserName(userName);
         controller.startMessagesHandler();
-        getAuthWindowController().close();
+        getAuthController().close();
         authStage.close();
         chatStage.show();
     }
@@ -84,11 +91,11 @@ public class ClientChatApplication extends Application {
         return authStage;
     }
 
-    public ClientChatController getChatWindowController() {
+    public ClientChatController getChatController() {
         return chatWindowLoader.getController();
     }
 
-    public AuthController getAuthWindowController() {
+    public AuthController getAuthController() {
         return authWindowLoader.getController();
     }
 

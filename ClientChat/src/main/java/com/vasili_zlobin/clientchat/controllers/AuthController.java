@@ -18,7 +18,10 @@ import java.io.IOException;
 
 public class AuthController {
     private ReadMessagesListener commandListener;
+    private ReadMessagesListener reconnectAuthListener;
     private boolean successAuth = false;
+    private String lastLogin;
+    private String lastPassword;
 
     @FXML
     public TextField loginField;
@@ -29,17 +32,7 @@ public class AuthController {
     @FXML
     public Button authButton;
 
-    private void setOnCloseWindowAuth() {
-        ClientChatApplication application = ClientChatApplication.getInstance();
-        application.getAuthStage().setOnCloseRequest(windowEvent -> {
-            if (!isSuccessAuth()) {
-                Network.getInstance().close();
-                application.closeClientChatApplication();
-            }
-        });
-    }
-
-    private Stage getAuthStage() {
+    public Stage getAuthStage() {
         return ClientChatApplication.getInstance().getAuthStage();
     }
 
@@ -58,29 +51,71 @@ public class AuthController {
             return;
         }
 
+        setLastLogin(login);
+        setLastPassword(password);
+        sendAuthCommand(login, password, getAuthStage());
+    }
+
+    public void sendAuthCommand(String login, String password, Stage stage) {
         try {
             Network.getInstance().sendCommand(Command.authCommand(login, password));
         } catch (IOException e) {
-            Dialogs.NetworkError.SEND_MESSAGE.show(getAuthStage());
+            Dialogs.NetworkError.SEND_MESSAGE.show(stage);
             e.printStackTrace();
         }
     }
 
+    public void setOnCloseWindowAuth() {
+        ClientChatApplication application = ClientChatApplication.getInstance();
+        application.getAuthStage().setOnCloseRequest(windowEvent -> {
+            if (!isSuccessAuth()) {
+                Network.getInstance().close();
+                application.closeClientChatApplication();
+            }
+        });
+    }
+
     public void startHandlerAuth() {
-        setOnCloseWindowAuth();
         commandListener = Network.getInstance().addReadMessagesListener(command -> {
             switch (command.getType()) {
                 case AUTH_OK: {
                     AuthOkCommandData data = (AuthOkCommandData) command.getData();
                     Platform.runLater(() -> {
-                        setSuccessAuth();
+                        setSuccessAuth(true);
                         ClientChatApplication.getInstance().switchToMainChatWindow(data.getUserName());
                     });
                     break;
                 }
                 case ERROR: {
+                    setLastLogin(null);
+                    setLastPassword(null);
                     ErrorCommandData data = (ErrorCommandData) command.getData();
                     Platform.runLater(() -> Dialogs.AuthError.INVALID_CREDENTIALS.show(getAuthStage(), data.getErrorMessage()));
+                    break;
+                }
+            }
+        });
+    }
+
+    public void setReconnectAuthListener() {
+        reconnectAuthListener = Network.getInstance().addReadMessagesListener(command -> {
+            switch (command.getType()) {
+                case AUTH_OK: {
+                    AuthOkCommandData data = (AuthOkCommandData) command.getData();
+                    Platform.runLater(() -> {
+                        setSuccessAuth(true);
+                        Network.getInstance().removeReadMessagesListener(reconnectAuthListener);
+                        ClientChatApplication.getInstance().getChatStage().setTitle(data.getUserName());
+                    });
+                    break;
+                }
+                case ERROR: {
+                    ErrorCommandData data = (ErrorCommandData) command.getData();
+                    Platform.runLater(() -> {
+                        Network.getInstance().removeReadMessagesListener(reconnectAuthListener);
+                        Dialogs.AuthError.INVALID_CREDENTIALS.show(getAuthStage(), data.getErrorMessage());
+                        ClientChatApplication.getInstance().showAuthWindow();
+                    });
                     break;
                 }
             }
@@ -100,7 +135,24 @@ public class AuthController {
         return successAuth;
     }
 
-    private void setSuccessAuth() {
-        this.successAuth = true;
+    public void setSuccessAuth(boolean success) {
+        this.successAuth = success;
+
+    }
+
+    public String getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(String lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public String getLastPassword() {
+        return lastPassword;
+    }
+
+    public void setLastPassword(String lastPassword) {
+        this.lastPassword = lastPassword;
     }
 }
