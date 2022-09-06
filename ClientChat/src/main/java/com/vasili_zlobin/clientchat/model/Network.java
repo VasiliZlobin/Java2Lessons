@@ -94,7 +94,7 @@ public class Network {
         String login = authController.getLastLogin();
         String password = authController.getLastPassword();
         if (login != null && password != null) {
-            authController.sendAuthCommand(login, password, authController.getAuthStage());
+            authController.sendAuthCommand(null, login, password, authController.getAuthStage());
         }
     }
 
