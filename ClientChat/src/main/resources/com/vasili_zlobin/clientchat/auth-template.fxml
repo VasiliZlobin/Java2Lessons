@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="202.0" prefWidth="317.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vasili_zlobin.clientchat.controllers.AuthController">
+<AnchorPane prefHeight="202.0" prefWidth="317.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vasili_zlobin.clientchat.controllers.AuthController">
    <children>
-      <Label layoutX="21.0" layoutY="25.0" prefHeight="17.0" prefWidth="55.0" text="Логин:" AnchorPane.bottomAnchor="160.0" AnchorPane.leftAnchor="21.0" AnchorPane.rightAnchor="241.0" AnchorPane.topAnchor="25.0" />
-      <Label layoutX="18.0" layoutY="82.0" text="Пароль:" AnchorPane.leftAnchor="18.0" AnchorPane.topAnchor="82.0" />
-      <TextField fx:id="loginField" layoutX="87.0" layoutY="21.0" />
-      <PasswordField fx:id="passwordField" layoutX="87.0" layoutY="78.0" />
-      <Button fx:id="authButton" layoutX="88.0" layoutY="150.0" mnemonicParsing="false" onAction="#executeAuth" prefHeight="25.0" prefWidth="149.0" text="Войти!" />
+      <Label layoutX="25.0" layoutY="77.0" prefHeight="17.0" prefWidth="55.0" text="Логин:" AnchorPane.bottomAnchor="108.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="237.0" AnchorPane.topAnchor="77.0" />
+      <Label layoutX="25.0" layoutY="117.0" text="Пароль:" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="117.0" />
+      <Label layoutX="25.0" layoutY="37.0" prefHeight="17.0" prefWidth="55.0" text="Имя:" />
+      <TextField fx:id="nickField" layoutX="87.0" layoutY="32.0" />
+      <TextField fx:id="loginField" layoutX="87.0" layoutY="72.0" />
+      <PasswordField fx:id="passwordField" layoutX="87.0" layoutY="112.0" />
+      <Button fx:id="authButton" layoutX="87.0" layoutY="152.0" mnemonicParsing="false" onAction="#executeAuth" prefHeight="26.0" prefWidth="160.0" text="Войти!" />
    </children>
 </AnchorPane>

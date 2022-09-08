@@ -9,9 +9,9 @@ public class Command implements Serializable {
     private Serializable data;
     private CommandType type;
 
-    public static Command authCommand(String login, String password) {
+    public static Command authCommand(String login, String password, String nickname) {
         Command command = new Command();
-        command.data = new AuthCommandData(login, password);
+        command.data = new AuthCommandData(login, password, nickname);
         command.type = CommandType.AUTH;
         return command;
     }

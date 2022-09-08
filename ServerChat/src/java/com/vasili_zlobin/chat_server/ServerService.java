@@ -2,7 +2,8 @@ package com.vasili_zlobin.chat_server;
 
 import com.vasili_zlobin.chat.command.Command;
 import com.vasili_zlobin.chat_server.authenticate.AuthInterface;
-import com.vasili_zlobin.chat_server.authenticate.BaseAuthService;
+import com.vasili_zlobin.chat_server.authenticate.DatabaseAuthService;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -18,7 +19,7 @@ public class ServerService {
 
     private ServerService() {
         this.clients = new HashMap<>();
-        this.authService = BaseAuthService.getInstance();
+        this.authService = DatabaseAuthService.getInstance();
     }
 
     private void waitAndProcess(ServerSocket serverSocket) {
@@ -99,4 +100,5 @@ public class ServerService {
             clients.get(receiver).sendMessage(sender, message);
         }
     }
+
 }

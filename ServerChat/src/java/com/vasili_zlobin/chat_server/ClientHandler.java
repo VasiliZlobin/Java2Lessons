@@ -5,11 +5,13 @@ import com.vasili_zlobin.chat.command.CommandType;
 import com.vasili_zlobin.chat.command.commands.AuthCommandData;
 import com.vasili_zlobin.chat.command.commands.PrivateMessageCommandData;
 import com.vasili_zlobin.chat.command.commands.PublicMessageCommandData;
+import com.vasili_zlobin.chat_server.database.DatabaseService;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.SQLException;
 
 public class ClientHandler {
     private static final int AUTH_TIMEOUT_MS = 120_000;
@@ -40,13 +42,20 @@ public class ClientHandler {
                 if (command.getType() == CommandType.AUTH) {
                     AuthCommandData data = (AuthCommandData) command.getData();
                     ServerService server = ServerService.getInstance();
+                    String nickname = data.getNickname();
                     String tempName = server.getAuthService().getUsernameByLoginPassword(data.getLogin(), data.getPassword());
+                    if (tempName == null && addNewUserInDatabase(nickname, data.getLogin(), data.getPassword())) {
+                        tempName = nickname;
+                    }
                     if (tempName == null) {
                         sendCommand(Command.errorCommand("Логин или пароль указаны некорректно"));
                     } else if (server.isUserNameBusy(tempName)) {
                         sendCommand(Command.errorCommand("Пользователь уже авторизован в чате"));
                     } else {
                         synchronized (syncObject) {
+                            if (nickname != null && !nickname.equals(tempName) && changeUserName(tempName, nickname)) {
+                                tempName = nickname;
+                            }
                             userName = tempName;
                             sendCommand(Command.authOkCommand(userName));
                             server.subscribe(this);
@@ -60,6 +69,29 @@ public class ClientHandler {
             System.err.println("Failed to authenticate user");
             throw e;
         }
+    }
+
+    private boolean addNewUserInDatabase(String nick, String login, String password) {
+        boolean result = false;
+        if (nick != null && login != null && password != null) {
+            try {
+                result = DatabaseService.getInstance().addNewUser(nick, login, password);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    private boolean changeUserName(String currentName, String nameNew) {
+        boolean result = false;
+            try {
+                result = DatabaseService.getInstance().changeUserName(currentName, nameNew);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        return result;
     }
 
     private Command readCommand() throws IOException {

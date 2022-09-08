@@ -24,6 +24,9 @@ public class AuthController {
     private String lastPassword;
 
     @FXML
+    public TextField nickField;
+
+    @FXML
     public TextField loginField;
 
     @FXML
@@ -53,12 +56,14 @@ public class AuthController {
 
         setLastLogin(login);
         setLastPassword(password);
-        sendAuthCommand(login, password, getAuthStage());
+        String nick = nickField.getText();
+        nick = nick != null && !nick.isBlank() ? nick : null;
+        sendAuthCommand(nick, login, password, getAuthStage());
     }
 
-    public void sendAuthCommand(String login, String password, Stage stage) {
+    public void sendAuthCommand(String nick, String login, String password, Stage stage) {
         try {
-            Network.getInstance().sendCommand(Command.authCommand(login, password));
+            Network.getInstance().sendCommand(Command.authCommand(login, password, nick));
         } catch (IOException e) {
             Dialogs.NetworkError.SEND_MESSAGE.show(stage);
             e.printStackTrace();
