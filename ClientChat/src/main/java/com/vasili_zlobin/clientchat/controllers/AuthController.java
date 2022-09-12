@@ -87,7 +87,7 @@ public class AuthController {
                     AuthOkCommandData data = (AuthOkCommandData) command.getData();
                     Platform.runLater(() -> {
                         setSuccessAuth(true);
-                        ClientChatApplication.getInstance().switchToMainChatWindow(data.getUserName());
+                        ClientChatApplication.getInstance().switchToMainChatWindow(data.getUserName(), data.getHistory());
                     });
                     break;
                 }

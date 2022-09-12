@@ -73,10 +73,11 @@ public class ClientChatApplication extends Application {
         authStage.showAndWait();
     }
 
-    public void switchToMainChatWindow(String userName) {
+    public void switchToMainChatWindow(String userName, String history) {
         chatStage.setTitle(userName);
         ClientChatController controller = getChatController();
         controller.setUserName(userName);
+        controller.appendMessageToChat(null, history, null);
         controller.startMessagesHandler();
         getAuthController().close();
         authStage.close();

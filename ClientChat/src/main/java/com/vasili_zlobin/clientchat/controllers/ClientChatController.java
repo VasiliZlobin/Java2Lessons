@@ -34,9 +34,14 @@ public class ClientChatController {
     @FXML
     public ListView<String> userList;
 
-    private void appendMessageToChat(String sender, String message) {
-        messageTextArea.appendText(DateFormat.getDateTimeInstance().format(new Date()));
-        messageTextArea.appendText(System.lineSeparator());
+    public void appendMessageToChat(String sender, String message, String prefix) {
+        if (message == null || message.isEmpty()) {
+            return;
+        }
+        if (prefix != null) {
+            messageTextArea.appendText(prefix);
+            messageTextArea.appendText(System.lineSeparator());
+        }
         if (sender != null) {
             messageTextArea.appendText(sender + ": ");
         }
@@ -62,7 +67,7 @@ public class ClientChatController {
             if (receiver == null || !receiver.equals(getUserName())) {
                 try {
                     Network.getInstance().sendMessage(message, receiver);
-                    appendMessageToChat("Я", message);
+                    appendMessageToChat("Я", message, DateFormat.getDateTimeInstance().format(new Date()));
                 } catch (IOException e) {
                     Dialogs.NetworkError.SEND_MESSAGE.show(getChatStage());
                     e.printStackTrace();
@@ -80,7 +85,7 @@ public class ClientChatController {
             switch (command.getType()) {
                 case RECEIVED_MESSAGE: {
                     ReceivedMessageCommandData data = (ReceivedMessageCommandData) command.getData();
-                    appendMessageToChat(data.getSender(), data.getMessage());
+                    appendMessageToChat(data.getSender(), data.getMessage(), DateFormat.getDateTimeInstance().format(new Date()));
                     break;
                 }
                 case UPDATE_USER_LIST: {
