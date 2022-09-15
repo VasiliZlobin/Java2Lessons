@@ -6,6 +6,7 @@ import com.vasili_zlobin.chat.command.commands.AuthCommandData;
 import com.vasili_zlobin.chat.command.commands.PrivateMessageCommandData;
 import com.vasili_zlobin.chat.command.commands.PublicMessageCommandData;
 import com.vasili_zlobin.chat_server.database.DatabaseService;
+import com.vasili_zlobin.chat_server.database.HistoryFilesService;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -20,6 +21,7 @@ public class ClientHandler {
     private final ObjectOutputStream outputStream;
     private final Object syncObject = new Object();
     private String userName;
+    private String login;
     private Thread handleThread;
     private Thread timeoutThread;
 
@@ -57,7 +59,8 @@ public class ClientHandler {
                                 tempName = nickname;
                             }
                             userName = tempName;
-                            sendCommand(Command.authOkCommand(userName));
+                            login = data.getLogin();
+                            sendCommand(Command.authOkCommand(userName, HistoryFilesService.loadHistory(login)));
                             server.subscribe(this);
                             timeoutThread.interrupt();
                             break;
@@ -177,6 +180,7 @@ public class ClientHandler {
     }
 
     public void sendMessage(String sender, String message) throws IOException {
+        HistoryFilesService.saveHistory(login, sender, message);
         sendCommand(Command.receivedMessageCommand(sender, message));
     }
 

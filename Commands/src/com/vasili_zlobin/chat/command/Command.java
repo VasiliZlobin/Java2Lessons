@@ -16,9 +16,9 @@ public class Command implements Serializable {
         return command;
     }
 
-    public static Command authOkCommand(String userName) {
+    public static Command authOkCommand(String userName, String history) {
         Command command = new Command();
-        command.data = new AuthOkCommandData(userName);
+        command.data = new AuthOkCommandData(userName, history);
         command.type = CommandType.AUTH_OK;
         return command;
     }
