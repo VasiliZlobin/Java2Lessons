@@ -13,16 +13,21 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ClientHandler {
     private static final int AUTH_TIMEOUT_MS = 120_000;
+    private static final int MAX_CONNECTS = 3;
+    private static final ExecutorService connectService = Executors.newFixedThreadPool(MAX_CONNECTS);
     private final Socket socket;
     private final ObjectInputStream inputStream;
     private final ObjectOutputStream outputStream;
     private final Object syncObject = new Object();
     private String userName;
     private String login;
-    private Thread handleThread;
+    private Future handleFuture;
     private Thread timeoutThread;
 
     public ClientHandler(Socket socket) throws IOException {
@@ -159,7 +164,7 @@ public class ClientHandler {
     }
 
     public void handle() {
-        handleThread = new Thread(() -> {
+        handleFuture = connectService.submit(() -> {
             try {
                 authenticate();
                 readMessages();
@@ -171,7 +176,6 @@ public class ClientHandler {
                 }
             }
         });
-        handleThread.start();
         checkAuthTimeout();
     }
 
@@ -189,8 +193,8 @@ public class ClientHandler {
             if (timeoutThread != null && !timeoutThread.isInterrupted()) {
                 timeoutThread.interrupt();
             }
-            if (handleThread != null && !handleThread.isInterrupted()) {
-                handleThread.interrupt();
+            if (handleFuture != null && !handleFuture.isCancelled()) {
+                handleFuture.cancel(true);
             }
             if (outputStream != null) {
                 outputStream.close();
