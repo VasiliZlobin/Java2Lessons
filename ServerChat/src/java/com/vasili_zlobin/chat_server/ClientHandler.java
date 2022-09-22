@@ -7,6 +7,7 @@ import com.vasili_zlobin.chat.command.commands.PrivateMessageCommandData;
 import com.vasili_zlobin.chat.command.commands.PublicMessageCommandData;
 import com.vasili_zlobin.chat_server.database.DatabaseService;
 import com.vasili_zlobin.chat_server.database.HistoryFilesService;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -34,6 +35,7 @@ public class ClientHandler {
         this.socket = socket;
         inputStream = new ObjectInputStream(socket.getInputStream());
         outputStream = new ObjectOutputStream(socket.getOutputStream());
+        getLogger().info("Пользователь подключился");
     }
 
     private void authenticate() throws IOException {
@@ -66,6 +68,7 @@ public class ClientHandler {
                             userName = tempName;
                             login = data.getLogin();
                             sendCommand(Command.authOkCommand(userName, HistoryFilesService.loadHistory(login)));
+                            getLogger().info("Пользователь {} авторизовался", userName);
                             server.subscribe(this);
                             timeoutThread.interrupt();
                             break;
@@ -74,7 +77,7 @@ public class ClientHandler {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Failed to authenticate user");
+            getLogger().error("Failed to authenticate user", e);
             throw e;
         }
     }
@@ -85,7 +88,7 @@ public class ClientHandler {
             try {
                 result = DatabaseService.getInstance().addNewUser(nick, login, password);
             } catch (SQLException e) {
-                e.printStackTrace();
+                getLogger().error("Error add user in database", e);
             }
         }
         return result;
@@ -96,7 +99,7 @@ public class ClientHandler {
             try {
                 result = DatabaseService.getInstance().changeUserName(currentName, nameNew);
             } catch (SQLException e) {
-                e.printStackTrace();
+                getLogger().error("Error change nickname in database", e);
             }
 
         return result;
@@ -107,8 +110,7 @@ public class ClientHandler {
         try {
             command = (Command) inputStream.readObject();
         } catch (ClassNotFoundException e) {
-            System.err.println("Failed to read Command class");
-            e.printStackTrace();
+            getLogger().error("Failed to read Command class", e);
         }
         return command;
     }
@@ -123,7 +125,7 @@ public class ClientHandler {
                 processMessage(command);
             }
         } catch (IOException e) {
-            System.err.println("Failed read message from " + userName);
+            getLogger().error("Failed read message from " + userName, e);
             throw e;
         }
     }
@@ -133,11 +135,13 @@ public class ClientHandler {
             case PRIVATE_MESSAGE: {
                 PrivateMessageCommandData data = (PrivateMessageCommandData) command.getData();
                 ServerService.getInstance().sendPersonalMessage(data.getMessage(), userName, data.getReceiver());
+                getLogger().info("Send message from {} to {}", userName, data.getReceiver());
                 break;
             }
             case PUBLIC_MESSAGE: {
                 PublicMessageCommandData data = (PublicMessageCommandData) command.getData();
                 ServerService.getInstance().broadcastMessage(data.getMessage(), userName);
+                getLogger().info("Send message from {} to all", userName);
                 break;
             }
         }
@@ -153,10 +157,14 @@ public class ClientHandler {
                     }
                 }
             } catch (InterruptedException e) {
-                System.out.println("Check timeout has interrupted");
+                getLogger().error("Check timeout has interrupted", e);
             }
         });
         timeoutThread.start();
+    }
+
+    private Logger getLogger() {
+        return ServerService.getInstance().getLogger();
     }
 
     public String getUserName() {
@@ -169,7 +177,7 @@ public class ClientHandler {
                 authenticate();
                 readMessages();
             } catch (IOException e) {
-                e.printStackTrace();
+                getLogger().error("Failed client connection", e);
             } finally {
                 if (!Thread.currentThread().isInterrupted()) {
                     closeConnection();
@@ -206,8 +214,7 @@ public class ClientHandler {
                 socket.close();
             }
         } catch (IOException e) {
-            System.err.println("Failed close connection");
-            e.printStackTrace();
+            getLogger().error("Failed close connection", e);
         } finally {
             ServerService.getInstance().unsubscribe(this);
         }
