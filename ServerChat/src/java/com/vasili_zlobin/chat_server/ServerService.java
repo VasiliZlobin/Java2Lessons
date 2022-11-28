@@ -3,6 +3,8 @@ package com.vasili_zlobin.chat_server;
 import com.vasili_zlobin.chat.command.Command;
 import com.vasili_zlobin.chat_server.authenticate.AuthInterface;
 import com.vasili_zlobin.chat_server.authenticate.DatabaseAuthService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -16,6 +18,7 @@ public class ServerService {
     private static ServerService serverInstance;
     private final AuthInterface authService;
     private final Map<String, ClientHandler> clients;
+    private final Logger logger = LogManager.getLogger(ServerService.class);
 
     private ServerService() {
         this.clients = new HashMap<>();
@@ -28,8 +31,7 @@ public class ServerService {
                 Socket clientSocket = serverSocket.accept();
                 new ClientHandler(clientSocket).handle();
             } catch (IOException e) {
-                System.err.println("Failed client's connection");
-                e.printStackTrace();
+                logger.error("Failed client's connection", e);
             }
         }
     }
@@ -43,8 +45,7 @@ public class ServerService {
             try {
                 clients.get(client).sendCommand(command);
             } catch (IOException e) {
-                System.err.println("Failed to send user list for " + client);
-                e.printStackTrace();
+                logger.error(String.format("Failed to send user list for %s", client), e);
             }
         }
     }
@@ -60,13 +61,17 @@ public class ServerService {
         return authService;
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
+
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
-            System.out.println("Chat server has started");
+            logger.info("Chat server has started");
             authService.start();
             waitAndProcess(serverSocket);
         } catch (IOException e) {
-            System.err.printf("Port %d is busy.", SERVER_PORT);
+            logger.error(String.format("Port %d is busy.", SERVER_PORT), e);
         }
     }
 

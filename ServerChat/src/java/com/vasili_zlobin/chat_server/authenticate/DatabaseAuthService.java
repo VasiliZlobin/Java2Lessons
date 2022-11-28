@@ -1,5 +1,6 @@
 package com.vasili_zlobin.chat_server.authenticate;
 
+import com.vasili_zlobin.chat_server.ServerService;
 import com.vasili_zlobin.chat_server.database.DatabaseService;
 
 import java.sql.SQLException;
@@ -21,7 +22,7 @@ public class DatabaseAuthService implements AuthInterface {
     @Override
     public void start() {
         databaseService = DatabaseService.getInstance();
-        System.out.println("Database authenticate server has started");
+        ServerService.getInstance().getLogger().info("Database authenticate server has started");
     }
 
     @Override
